@@ -11,11 +11,17 @@ app.post("/scrape", async (req, res) => {
 
   let browser;
   try {
+    // Configuración de Puppeteer
     browser = await puppeteer.launch({
-      headless: true, // Optar por el nuevo modo Headless
-      timeout: 60000,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      headless: true,
+      headless: true, // Corre en modo headless
+      args: [
+        "--no-sandbox", // Desactiva el sandbox para compatibilidad en la nube
+        "--disable-setuid-sandbox", // Opción adicional para evitar problemas de permisos
+        "--disable-gpu", // Desactiva la GPU para entornos de servidor
+        "--single-process", // Ejecuta en un solo proceso
+        "--disable-dev-shm-usage", // Evita problemas de memoria compartida
+      ],
+      timeout: 60000, // Timeout más largo para garantizar la carga en la nube
     });
 
     const page = await browser.newPage();
@@ -39,11 +45,10 @@ app.post("/scrape", async (req, res) => {
       };
     });
 
-    // Return the successful response with scraped data
+    // Respuesta exitosa con los datos scrapeados
     res.json(content);
   } catch (error) {
     console.error("Error al hacer scraping:", error);
-    // Return an error response
     res.status(500).json({ error: "Error al hacer scraping" });
   } finally {
     if (browser) {
