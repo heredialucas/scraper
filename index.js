@@ -29,19 +29,33 @@ app.post("/scrape", async (req, res) => {
 
     const content = await page.evaluate(() => {
       const title = document.querySelector("h1#content")?.innerText || "";
-      const articleContent = document.querySelector("article")?.innerHTML || "";
 
-      const links = Array.from(document.querySelectorAll("article a")).map(
-        (a) => ({
-          text: a.innerText,
-          href: a.href,
-        })
-      );
+      // Obtener el contenido del artículo
+      const articleElement = document.querySelector("article");
+
+      // Eliminar los elementos de encabezado (h1, h2, h3, h4) y obtener solo el texto
+      if (articleElement) {
+        // Clonamos el nodo para no alterar el DOM original
+        const clonedArticle = articleElement.cloneNode(true);
+
+        // Eliminamos los encabezados
+        const headers = clonedArticle.querySelectorAll("h1, h2, h3, h4");
+        headers.forEach((header) => header.remove());
+
+        return {
+          title,
+          content: clonedArticle.innerText.trim(), // Solo el texto sin títulos
+          links: Array.from(clonedArticle.querySelectorAll("a")).map((a) => ({
+            text: a.innerText,
+            href: a.href,
+          })),
+        };
+      }
 
       return {
         title,
-        content: articleContent,
-        links,
+        content: "", // Si no hay artículo, el contenido será vacío
+        links: [],
       };
     });
 
