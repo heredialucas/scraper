@@ -45,17 +45,12 @@ app.post("/scrape", async (req, res) => {
         return {
           title,
           content: clonedArticle.innerText.trim(), // Solo el texto sin títulos
-          links: Array.from(clonedArticle.querySelectorAll("a")).map((a) => ({
-            text: a.innerText,
-            href: a.href,
-          })),
         };
       }
 
       return {
         title,
         content: "", // Si no hay artículo, el contenido será vacío
-        links: [],
       };
     });
 
