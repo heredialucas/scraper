@@ -13,48 +13,36 @@ app.post("/scrape", async (req, res) => {
   try {
     // Configuración de Puppeteer
     browser = await puppeteer.launch({
-      headless: true, // Corre en modo headless
+      headless: true,
       args: [
-        "--no-sandbox", // Desactiva el sandbox para compatibilidad en la nube
-        "--disable-setuid-sandbox", // Opción adicional para evitar problemas de permisos
-        "--disable-gpu", // Desactiva la GPU para entornos de servidor
-        "--single-process", // Ejecuta en un solo proceso
-        "--disable-dev-shm-usage", // Evita problemas de memoria compartida
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-gpu",
+        "--single-process",
+        "--disable-dev-shm-usage",
       ],
-      timeout: 60000, // Timeout más largo para garantizar la carga en la nube
+      timeout: 60000,
     });
 
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: "networkidle0" });
 
+    // Evaluar el contenido de la página y extraer los nombres de los productos
     const content = await page.evaluate(() => {
-      const title = document.querySelector("h1#content")?.innerText || "";
+      // Ajusta el selector para los elementos de nombre de producto
+      const productElements = document.querySelectorAll(
+        ".browse-view .product-item .product-name"
+      );
 
-      // Obtener el contenido del artículo
-      const articleElement = document.querySelector("article");
+      // Mapea los nombres de los productos a un array
+      const productNames = Array.from(productElements).map((product) =>
+        product.innerText.trim()
+      );
 
-      // Eliminar los elementos de encabezado (h1, h2, h3, h4) y obtener solo el texto
-      if (articleElement) {
-        // Clonamos el nodo para no alterar el DOM original
-        const clonedArticle = articleElement.cloneNode(true);
-
-        // Eliminamos los encabezados
-        const headers = clonedArticle.querySelectorAll("h1, h2, h3, h4");
-        headers.forEach((header) => header.remove());
-
-        return {
-          title,
-          content: clonedArticle.innerText.trim(), // Solo el texto sin títulos
-        };
-      }
-
-      return {
-        title,
-        content: "", // Si no hay artículo, el contenido será vacío
-      };
+      return { productNames };
     });
 
-    // Respuesta exitosa con los datos scrapeados
+    // Respuesta exitosa con los nombres de los productos
     res.json(content);
   } catch (error) {
     console.error("Error al hacer scraping:", error);
